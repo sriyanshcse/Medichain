@@ -33,7 +33,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-
+	"time"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
 )
@@ -49,6 +49,9 @@ type Med struct {
 	BatchNo string `json:"batchno"`
 	ExpiryDate string `json:"expirydate"`
 	Owner  string `json:"owner"`
+	Location string `json:"location"`
+	Timestamp time.Time `json:"timestamp"`
+	Temperature string `json:"temperature"`
 }
 
 /*
@@ -95,8 +98,8 @@ func (s *SmartContract) queryMed(APIstub shim.ChaincodeStubInterface, args []str
 
 func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Response {
 	meds := []Med{
-		Med{Make: "Cipla", Name: "Azid", BatchNo: "123", ExpiryDate: "02/2020",Owner: "Tomoko"},
-		Med{Make: "GSK", Name: "Crocin", BatchNo: "101", ExpiryDate: "03/2020",Owner: "Thomas"},
+		Med{Make: "Cipla", Name: "Azid", BatchNo: "123", ExpiryDate: "02/2020",Owner: "Tomoko", Location: "NA", Timestamp: time.Now(), Temperature: "23"},
+		Med{Make: "GSK", Name: "Crocin", BatchNo: "101", ExpiryDate: "03/2020",Owner: "Thomas", Location: "NA", Timestamp: time.Now(), Temperature: "23"},
 	}
 
 	i := 0
@@ -114,16 +117,30 @@ func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Respo
 func (s *SmartContract) createMed(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	fmt.Println(len(args))
-	if len(args) != 6 {
-		return shim.Error("Incorrect number of arguments. Expecting 5")
+	if len(args) != 8 {
+		return shim.Error("Incorrect number of arguments. Expecting 9")
 	}
 
-	var med = Med{Make: args[1], Name: args[2], BatchNo: args[3], ExpiryDate: args[4], Owner: args[5]}
+	var med = getUpdatedObject(args[1:])
 
 	medAsBytes, _ := json.Marshal(med)
 	APIstub.PutState(args[0], medAsBytes)
 
 	return shim.Success(nil)
+}
+
+func getUpdatedObject (objArgs []string) Med {
+	med := Med{
+		Make: objArgs[0],
+		Name : objArgs[1],
+		BatchNo: objArgs[2],
+		ExpiryDate: objArgs[3],
+		Owner: objArgs[4],
+		Location: objArgs[5],
+		Timestamp: time.Now(),
+		Temperature: objArgs[6],
+	}
+	return med
 }
 
 func (s *SmartContract) queryAllMeds(APIstub shim.ChaincodeStubInterface) sc.Response {
@@ -184,6 +201,22 @@ func (s *SmartContract) changeMedOwner(APIstub shim.ChaincodeStubInterface, args
 	medAsBytes, _ = json.Marshal(med)
 	APIstub.PutState(args[0], medAsBytes)
 
+	return shim.Success(nil)
+}
+
+func (s *SmartContract) changeLocTemp(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+	if len (args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting 3")
+	}
+
+	medAsBytes, _ := APIstub.GetState(args[0])
+	med := Med{}
+
+	json.Unmarshal(medAsBytes, &med)
+	med.Location = args[1]
+	med.Temperature = args[2]
+	medAsBytes, _ = json.Marshal(med)
+	APIstub.PutState(args[0], medAsBytes)
 	return shim.Success(nil)
 }
 
