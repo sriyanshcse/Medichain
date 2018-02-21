@@ -1,3 +1,7 @@
+
+// This code is for giving all the instances where temparture violated specific
+// threshold, the query call be seen from queryTemp.js
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -51,7 +55,7 @@ type Med struct {
 	Owner  string `json:"owner"`
 	Location string `json:"location"`
 	Timestamp time.Time `json:"timestamp"`
-	Temperature string `json:"temperature"`
+	Temperature float64 `json:"temperature"`
 }
 
 /*
@@ -81,6 +85,10 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.queryAllMeds(APIstub)
 	} else if function == "changeMedOwner" {
 		return s.changeMedOwner(APIstub, args)
+	}else if function == "tempartureViolations" {
+		return s.tempartureViolations(APIstub, args)
+	}else if function == "changeLocTemp" {
+		return s.changeLocTemp(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
@@ -98,8 +106,8 @@ func (s *SmartContract) queryMed(APIstub shim.ChaincodeStubInterface, args []str
 
 func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Response {
 	meds := []Med{
-		Med{Make: "Cipla", Name: "Azid", BatchNo: "123", ExpiryDate: "02/2020",Owner: "Tomoko", Location: "NA", Timestamp: time.Now(), Temperature: "23"},
-		Med{Make: "GSK", Name: "Crocin", BatchNo: "101", ExpiryDate: "03/2020",Owner: "Thomas", Location: "NA", Timestamp: time.Now(), Temperature: "23"},
+		Med{Make: "Cipla", Name: "Azid", BatchNo: "123", ExpiryDate: "02/2020",Owner: "Tomoko", Location: "NA", Timestamp: time.Now(), Temperature: 23},
+		Med{Make: "GSK", Name: "Crocin", BatchNo: "101", ExpiryDate: "03/2020",Owner: "Thomas", Location: "NA", Timestamp: time.Now(), Temperature: 23},
 	}
 
 	i := 0
@@ -130,17 +138,22 @@ func (s *SmartContract) createMed(APIstub shim.ChaincodeStubInterface, args []st
 }
 
 func getUpdatedObject (objArgs []string) Med {
-	med := Med{
-		Make: objArgs[0],
-		Name : objArgs[1],
-		BatchNo: objArgs[2],
-		ExpiryDate: objArgs[3],
-		Owner: objArgs[4],
-		Location: objArgs[5],
-		Timestamp: time.Now(),
-		Temperature: objArgs[6],
-	}
-	return med
+	if n, err := strconv.ParseFloat(objArgs[6], 64); err == nil {
+        med := Med{
+			Make: objArgs[0],
+			Name : objArgs[1],
+			BatchNo: objArgs[2],
+			ExpiryDate: objArgs[3],
+			Owner: objArgs[4],
+			Location: objArgs[5],
+			Timestamp: time.Now(),
+			Temperature: n,
+		}
+		return med
+    }
+    med := Med{}
+    return med
+	
 }
 
 func (s *SmartContract) queryAllMeds(APIstub shim.ChaincodeStubInterface) sc.Response {
@@ -204,21 +217,97 @@ func (s *SmartContract) changeMedOwner(APIstub shim.ChaincodeStubInterface, args
 	return shim.Success(nil)
 }
 
+func validateTemperature(lower_limit float64, upper_limit float64, given float64) bool {
+    if given >= lower_limit && given <= upper_limit {
+        return true
+    }
+    return false
+}
+
 func (s *SmartContract) changeLocTemp(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+	
 	if len (args) != 3 {
 		return shim.Error("Incorrect number of arguments. Expecting 3")
 	}
 
-	medAsBytes, _ := APIstub.GetState(args[0])
-	med := Med{}
+	var lower_limit = 18.0
+    var upper_limit = 26.0
+    if n, err := strconv.ParseFloat(args[2], 64) ; err == nil{
+    	if(!validateTemperature(lower_limit, upper_limit, n )){
+			return shim.Error("Temparture conditions have been violated")
+		}
+		medAsBytes, _ := APIstub.GetState(args[0])
+		med := Med{}
 
-	json.Unmarshal(medAsBytes, &med)
-	med.Location = args[1]
-	med.Temperature = args[2]
-	medAsBytes, _ = json.Marshal(med)
-	APIstub.PutState(args[0], medAsBytes)
+		json.Unmarshal(medAsBytes, &med)
+		med.Location = args[1]
+		med.Temperature = n
+		medAsBytes, _ = json.Marshal(med)
+		APIstub.PutState(args[0], medAsBytes)
+		return shim.Success(nil)
+    }
 	return shim.Success(nil)
 }
+
+
+
+
+func (s *SmartContract) tempartureViolations(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+	fmt.Printf("- tempartureViolations:")
+	startKey := "Med0"
+	endKey := "Med999"
+
+	resultsIterator, err := APIstub.GetStateByRange(startKey, endKey)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	defer resultsIterator.Close()
+
+	// buffer is a JSON array containing QueryResults
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		medAsBytes := queryResponse.Value
+		med := Med{}
+		json.Unmarshal(medAsBytes, &med)
+		
+		var lower_limit = 18.0
+	    var upper_limit = 26.0
+
+		if(!validateTemperature(lower_limit, upper_limit, med.Temperature)){
+			return shim.Error("Temparture conditions have been violated somewhere")
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString("{\"Key\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(queryResponse.Key)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Record\":")
+		// Record is a JSON object, so we write as-is
+		buffer.WriteString(string(queryResponse.Value))
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+
+	fmt.Printf("- tempartureViolations:\n%s\n", buffer.String())
+
+	return shim.Success(buffer.Bytes())
+
+	
+}
+
+
 
 // The main function is only relevant in unit test mode. Only included here for completeness.
 func main() {
@@ -229,3 +318,6 @@ func main() {
 		fmt.Printf("Error creating new Smart Contract: %s", err)
 	}
 }
+
+
+
