@@ -81,6 +81,10 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.queryAllMeds(APIstub)
 	} else if function == "changeMedOwner" {
 		return s.changeMedOwner(APIstub, args)
+	} else if function == "changeLocTemp" {
+		return s.changeLocTemp(APIstub, args)
+	} else if function == "queryMedHistory" {
+		return s.queryMedHistory(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
@@ -95,6 +99,43 @@ func (s *SmartContract) queryMed(APIstub shim.ChaincodeStubInterface, args []str
 	medAsBytes, _ := APIstub.GetState(args[0])
 	return shim.Success(medAsBytes)
 }
+
+func (s *SmartContract) queryMedHistory(APIstub shim.ChaincodeStubInterface, args[]string) sc.Response {
+	
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+
+	versionsIteratorForKey, err := APIstub.GetHistoryForKey(args[0])
+
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	defer versionsIteratorForKey.Close()
+
+	var buffer bytes.Buffer
+	buffer.WriteString("{")
+	buffer.WriteString("\"Key\":\"")
+	buffer.WriteString(args[0])
+	buffer.WriteString("\",\"Records\":[")
+	bVersionArrayMemberAlreadyWritten := false
+	for versionsIteratorForKey.HasNext() {
+		queryResponseForKey, err := versionsIteratorForKey.Next()
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+		if bVersionArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		bVersionArrayMemberAlreadyWritten = true
+		buffer.WriteString(string(queryResponseForKey.Value))
+	}
+	buffer.WriteString("]}")
+	fmt.Printf("- queryMedHistory:\n%s\n", buffer.String())
+	return shim.Success(buffer.Bytes())
+ }
 
 func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Response {
 	meds := []Med{
@@ -173,7 +214,7 @@ func (s *SmartContract) queryAllMeds(APIstub shim.ChaincodeStubInterface) sc.Res
 		buffer.WriteString(queryResponse.Key)
 		buffer.WriteString("\"")
 
-		buffer.WriteString(", \"Record\":")
+		buffer.WriteString(", \"Records\":")
 		// Record is a JSON object, so we write as-is
 		buffer.WriteString(string(queryResponse.Value))
 		buffer.WriteString("}")
