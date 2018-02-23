@@ -61,8 +61,8 @@ Fabric_Client.newDefaultKeyValueStore({ path: store_path
 	var request = {
 		//targets: let default to the peer assigned to the client
 		chaincodeId: 'fabcar',
-		fcn: 'createMed',
-		args: ['Med2', 'SunPharma','bethamycin','102','O','Sriyansh', 'NA', '25'],
+		fcn: 'changeMedOwner',
+		args: ['Med1', 'Mascarenes'],
 		chainId: 'mychannel',
 		txId: tx_id
 	};
