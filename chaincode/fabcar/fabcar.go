@@ -33,7 +33,7 @@ package main
  * 2 specific Hyperledger Fabric specific libraries for Smart Contracts
  */
 import (
-	"bytes"
+	//"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -42,20 +42,29 @@ import (
 	sc "github.com/hyperledger/fabric/protos/peer"
 )
 
+var OpenTradeKey = "_opentrades"
+
 // Define the Smart Contract structure
 type SmartContract struct {
 }
 
 // Define the Med structure, with 4 properties.  Structure tags are used by encoding/json library
 type Med struct {
-	Make   string `json:"make"`
-	Name  string `json:"name"`
-	BatchNo string `json:"batchno"`
-	ExpiryDate string `json:"expirydate"`
-	Owner  string `json:"owner"`
-	Location string `json:"location"`
-	Timestamp time.Time `json:"timestamp"`
-	Temperature float64 `json:"temperature"`
+	ID 			string 		`json:"id"`
+	Description string 		`json:"description"`
+	Owner  		string 		`json:"owner"`
+	Location 	string 		`json:"location"`
+	Timestamp 	time.Time 	`json:"timestamp"`
+	Temperature float64 	`json:"temperature"`
+	Status 		bool 		`json:"status"`
+	Lower_Limit float64 	`json:"lower_limit"`
+	Upper_Limit float64		`json:"upper_limit"`
+}
+
+type OpenTrade struct {
+	Owner 	  string   	`json:"owner"`
+	Timestamp time.Time `json:"timestamp"`   
+	MedList   []string 	`json:medlist"`
 }
 
 /*
@@ -83,10 +92,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.createMed(APIstub, args)
 	} else if function == "queryAllMeds" {
 		return s.queryAllMeds(APIstub)
-	} else if function == "changeMedOwner" {
-		return s.changeMedOwner(APIstub, args)
-	}else if function == "tempartureViolations" {
-		return s.tempartureViolations(APIstub, args)
+	} else if function == "transferOwnership" {
+		return s.transferOwnership(APIstub, args)
 	} else if function == "changeLocTemp" {
 		return s.changeLocTemp(APIstub, args)
 	} else if function == "queryMedHistory" {
@@ -113,40 +120,36 @@ func (s *SmartContract) queryMedHistory(APIstub shim.ChaincodeStubInterface, arg
 	}
 
 
-	versionsIteratorForKey, err := APIstub.GetHistoryForKey(args[0])
+	versionsIterator, err := APIstub.GetHistoryForKey(args[0])
 
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	defer versionsIteratorForKey.Close()
+	defer versionsIterator.Close()
 
-	var buffer bytes.Buffer
-	buffer.WriteString("{")
-	buffer.WriteString("\"Key\":\"")
-	buffer.WriteString(args[0])
-	buffer.WriteString("\",\"Records\":[")
-	bVersionArrayMemberAlreadyWritten := false
-	for versionsIteratorForKey.HasNext() {
-		queryResponseForKey, err := versionsIteratorForKey.Next()
+	MedHistoryList := []Med{}
+
+	for versionsIterator.HasNext() {
+		queryResponse, err := versionsIterator.Next()
 		if err != nil {
 			return shim.Error(err.Error())
 		}
-		if bVersionArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		bVersionArrayMemberAlreadyWritten = true
-		buffer.WriteString(string(queryResponseForKey.Value))
+		med := Med{}
+		json.Unmarshal(queryResponse.Value, &med)
+		med.ID = args[0]
+		MedHistoryList = append(MedHistoryList, med)
 	}
-	buffer.WriteString("]}")
-	fmt.Printf("- queryMedHistory:\n%s\n", buffer.String())
-	return shim.Success(buffer.Bytes())
+
+	fmt.Printf("- queryMedHistory:\n%+v\n", MedHistoryList)
+	medAsBytes, _ := json.Marshal(MedHistoryList)
+	return shim.Success(medAsBytes)
  }
 
 func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Response {
 	meds := []Med{
-		Med{Make: "Cipla", Name: "Azid", BatchNo: "123", ExpiryDate: "02/2020",Owner: "Tomoko", Location: "NA", Timestamp: time.Now(), Temperature: 23},
-		Med{Make: "GSK", Name: "Crocin", BatchNo: "101", ExpiryDate: "03/2020",Owner: "Thomas", Location: "NA", Timestamp: time.Now(), Temperature: 23},
+		Med{ID: "4501", Description: "", Owner: "Tomoko", Location: "NA", Timestamp: time.Now(), Temperature: 23, Status : true, Lower_Limit : 20, Upper_Limit: 25},
+		Med{ID: "4570", Description: "", Owner: "Thomas", Location: "NA", Timestamp: time.Now(), Temperature: 23, Status : true, Lower_Limit: 18, Upper_Limit: 25},
 	}
 
 	i := 0
@@ -157,36 +160,39 @@ func (s *SmartContract) initLedger(APIstub shim.ChaincodeStubInterface) sc.Respo
 		fmt.Println("Added", meds[i])
 		i = i + 1
 	}
-
 	return shim.Success(nil)
 }
 
 func (s *SmartContract) createMed(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	fmt.Println(len(args))
-	if len(args) != 8 {
+	if len(args) != 7 {
 		return shim.Error("Incorrect number of arguments. Expecting 9")
 	}
 
 	var med = getUpdatedObject(args[1:])
-
+	med.Status = validateTemperature(med.Lower_Limit, med.Upper_Limit, med.Temperature)
 	medAsBytes, _ := json.Marshal(med)
 	APIstub.PutState(args[0], medAsBytes)
-
+	if (!med.Status) {
+		return shim.Error("Temperature Conditions have been violated")
+	}
 	return shim.Success(nil)
 }
 
 func getUpdatedObject (objArgs []string) Med {
-	if n, err := strconv.ParseFloat(objArgs[6], 64); err == nil {
+	if n, err := strconv.ParseFloat(objArgs[4], 64); err == nil {
+		LL, _ := strconv.ParseFloat(objArgs[5], 64)
+		UL, _ := strconv.ParseFloat(objArgs[6], 64)
         med := Med{
-			Make: objArgs[0],
-			Name : objArgs[1],
-			BatchNo: objArgs[2],
-			ExpiryDate: objArgs[3],
-			Owner: objArgs[4],
-			Location: objArgs[5],
+			ID : objArgs[0],
+			Description : objArgs[1],
+			Owner : objArgs[2],
+			Location: objArgs[3],
 			Timestamp: time.Now(),
 			Temperature: n,
+			Lower_Limit: LL,
+			Upper_Limit: UL,
 		}
 		return med
     }
@@ -205,40 +211,24 @@ func (s *SmartContract) queryAllMeds(APIstub shim.ChaincodeStubInterface) sc.Res
 		return shim.Error(err.Error())
 	}
 	defer resultsIterator.Close()
-
-	// buffer is a JSON array containing QueryResults
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
-
-	bArrayMemberAlreadyWritten := false
+	AllMedList := []Med{}
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
 			return shim.Error(err.Error())
 		}
-		// Add a comma before array members, suppress it for the first array member
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		buffer.WriteString("{\"Key\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(queryResponse.Key)
-		buffer.WriteString("\"")
-
-		buffer.WriteString(", \"Records\":")
-		// Record is a JSON object, so we write as-is
-		buffer.WriteString(string(queryResponse.Value))
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
+		med := Med{}
+		json.Unmarshal(queryResponse.Value, &med)
+		med.ID = queryResponse.Key
+		AllMedList = append(AllMedList, med)
 	}
-	buffer.WriteString("]")
 
-	fmt.Printf("- queryAllMeds:\n%s\n", buffer.String())
-
-	return shim.Success(buffer.Bytes())
+	fmt.Printf("- queryAllMeds:\n%+v\n", AllMedList)
+	medAsBytes, err := json.Marshal(AllMedList)
+	return shim.Success(medAsBytes)
 }
 
-func (s *SmartContract) changeMedOwner(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+func (s *SmartContract) transferOwnership(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	if len(args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
@@ -269,16 +259,13 @@ func (s *SmartContract) changeLocTemp(APIstub shim.ChaincodeStubInterface, args 
 		return shim.Error("Incorrect number of arguments. Expecting 3")
 	}
 
-	var lower_limit = 18.0
-    var upper_limit = 26.0
     if n, err := strconv.ParseFloat(args[2], 64) ; err == nil{
-    	if(!validateTemperature(lower_limit, upper_limit, n )){
-			return shim.Error("Temparture conditions have been violated")
-		}
 		medAsBytes, _ := APIstub.GetState(args[0])
 		med := Med{}
-
 		json.Unmarshal(medAsBytes, &med)
+		if(!validateTemperature(med.Lower_Limit, med.Upper_Limit, n)){
+			return shim.Error("Temparture conditions have been violated")
+		}
 		med.Location = args[1]
 		med.Temperature = n
 		medAsBytes, _ = json.Marshal(med)
@@ -290,8 +277,13 @@ func (s *SmartContract) changeLocTemp(APIstub shim.ChaincodeStubInterface, args 
 
 
 
+func (s *SmartContract) open_trade(APIstub shim.ChaincodeStubInterface, args []string) {
 
-func (s *SmartContract) tempartureViolations(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
+	//if len(args) != 
+}
+
+
+/*func (s *SmartContract) tempartureViolations(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 	fmt.Printf("- tempartureViolations:")
 	startKey := "Med0"
 	endKey := "Med999"
@@ -342,10 +334,8 @@ func (s *SmartContract) tempartureViolations(APIstub shim.ChaincodeStubInterface
 	fmt.Printf("- tempartureViolations:\n%s\n", buffer.String())
 
 	return shim.Success(buffer.Bytes())
-
-	
 }
-
+*/
 
 
 // The main function is only relevant in unit test mode. Only included here for completeness.
