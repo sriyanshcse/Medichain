@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Create asset</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
+    
+      <link href="style1.css" rel="stylesheet">
+    
+    
+    <link href="style2.css" rel="stylesheet">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	<!-- 
+	<script type="text/javascript">
+		$(document).ready(function(){
+		  	$("button").on("click",function(){
+			      console.log("hii");
+			      
+			      $.ajax({
+			      	type: 'get',
+			        headers:{  
+			           	"authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTk2NzU4NjgsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE1MTk2Mzk4Njh9.bqRzHkhuk1AtJl-zpN-dUkg36izjcBz5gCUIFeM2wgQ",
+					     "Accept":"application/json",
+					      "content-type":"application/x-www-form-urlencoded"
+			        },   
+			        url:"http://192.168.0.101:4000/channels/mychannel/chaincodes/fabcar?peer=peer1&fcn=queryAllMeds&args=%5B%22%22%5D",
+			        success:function(response){
+						console.log(response);
+			          var r=JSON.parse(response);
+			          console.log(r);
+			          for (var i = 0; i < r.length ; i++) {
+				          $("#main"+i).html(r[i].owner);
+			          }
+			        }
+
+			      });
+			});
+	  	});
+
+	</script>  -->
+
+
+	<script>
+	var app = angular.module('myApp', []);
+	app.controller('myCtrl', function($scope, $http, $window) {
+		$scope.myFunc = function() {
+		  $http({
+		    method : "POST",
+		    headers:{  
+				           	"authorization": "Bearer " + $window.localStorage["org1token"],
+						     "Accept":"application/json",
+						      "content-type":"application/json"
+				        },   
+		    url:"http://192.168.0.101:4000/channels/mychannel/chaincodes/fabcar",
+		    data: {
+		    	fcn: "createMed",
+		    	args: [$scope.medid, $scope.desc, $scope.owner, $scope.latitude+' '+$scope.longitude, $scope.temperature, $scope.lowlim, $scope.upplim]
+		    }
+		  }).then(function mySuccess(response) {
+		      
+		      console.log(response);
+
+				         // var r=JSON.parse(response.data[0]);
+
+	          //$scope.myData = response.data;
+		    })
+		}
+	});
+	</script>
+
+    <style>
+      /* note: this is a hack for ios iframe for bootstrap themes shopify page */
+      /* this chunk of css is not part of the toolkit :) */
+      body {
+        width: 1px;
+        min-width: 100%;
+        *width: 100%;
+      }
+
+      #box1{
+      	margin: 10px;
+      	width: 300px;
+      }
+
+    </style>
+
+</head>
+<body>
+
+	<h2 style="padding: 10px; margin: 30px;  ">Create an asset</h2><hr>
+
+	<div ng-app="myApp" ng-controller="myCtrl"> 
+
+	<center>
+
+		<form>
+			<input type="text" ng-model="medid" id="box1" placeholder="Medicine id"><br/>
+			<textarea placeholder="Description" id="box1" cols=20 rows=5 ng-model="desc"></textarea><br/>
+			<input type="text" ng-model="temperature" id="box1" placeholder = "Temperature"><br/>
+			<input type="text" ng-model="lowlim" id="box1" placeholder="Temp. lower limit"><br/>
+			<input type="text" ng-model="upplim" id="box1" placeholder="Temp. upper limit"><br/>
+			<input type="text" ng-model="latitude" id="box1" placeholder="Latitude"><br/>
+			<input type="text" ng-model="longitude" id="box1" placeholder="Longitude"><br/>
+			<input type="text" ng-model="owner" id="box1" placeholder="Owner"><br/>
+
+
+		</form>
+<br/>
+		<button ng-click = "myFunc()" style="background: #3498db; color: white; font-size: 20px; border-radius: 5px; padding: 10px; ">Create asset</button>
+
+	</center>
+
+	</div>
+
+
+</body>
+</html>

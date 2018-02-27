@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Medichain</title>
+
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
+    
+    <link href="style1.css" rel="stylesheet">
+    
+    
+    <link href="style2.css" rel="stylesheet">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+	<script type="text/javascript">
+		
+		var app = angular.module('myApp', []);
+		app.controller('myCtrl', function($scope, $http, $window, $timeout) {
+			$scope.myFunc = function() {
+			  $http({
+			    method : "POST",
+			    headers:{  
+					    "Accept":"application/json",
+					    "content-type":"application/json"
+					    },   
+			    url:"http://192.168.0.101:4000/users",
+			    data: {
+			    	username: "Jim",
+			    	orgName: "org1"
+			    }
+			  }).then(function mySuccess(response) {
+			      
+			      	console.log(response.data);
+			  		$window.localStorage["org1token"] = response.data.token;
+
+			  		$scope.dataprint = 'User 1 enrolled successfully.... ' + response.data.token;	
+
+			  		$scope.myFunc2();
+
+
+					         // var r=JSON.parse(response.data[0]);
+
+		          //$scope.myData = response.data;
+			    })
+			}
+
+			$scope.myFunc2 = function() {
+				$http({
+				    method : "POST",
+				    headers:{  
+						    "Accept":"application/json",
+						    "content-type":"application/json"
+						    },   
+				    url:"http://192.168.0.101:4000/users",
+				    data: {
+				    	username: "Barry",
+				    	orgName: "org2"
+				    }
+				  }).then(function mySuccess(response) {
+				      
+				      	console.log(response.data);
+				  		$window.localStorage["org2token"] = response.data.token;
+
+				  		$scope.dataprint = 'User 2 enrolled successfully.... ' + response.data.token;
+
+				  		$scope.myFunc3();
+
+
+						         // var r=JSON.parse(response.data[0]);
+
+			          //$scope.myData = response.data;
+				    })
+			}
+
+			$scope.myFunc3 = function() {
+				$http({
+				    method : "POST",
+				    headers:{  
+				    		"authorization": "Bearer " + $window.localStorage["org1token"],
+						    "Accept":"application/json",
+						    "content-type":"application/json"
+						    },   
+				    url:"http://192.168.0.101:4000/channels",
+				    data: {
+				    	channelName: "mychannel",
+						channelConfigPath: "../artifacts/channel/mychannel.tx"
+				    }
+				  }).then(function mySuccess(response) {
+				      
+				      	console.log(response.data);
+
+				  		$scope.dataprint = 'Channel created successfully.... ';
+
+				  		$timeout(function() { $scope.myFunc4() }, 2000);
+
+
+						         // var r=JSON.parse(response.data[0]);
+
+			          //$scope.myData = response.data;
+				    })
+			}	
+
+			$scope.myFunc4 = function() {
+				$http({
+				    method : "POST",
+				    headers:{  
+				    		"authorization": "Bearer " + $window.localStorage["org1token"],
+						    "Accept":"application/json",
+						    "content-type":"application/json"
+						    },   
+				    url:"http://192.168.0.101:4000/channels/mychannel/peers",
+				    data: {
+				    	peers: ["peer1","peer2"]
+				    }
+				  }).then(function mySuccess(response) {
+				      
+				      	console.log(response.data);
+
+				  		$scope.dataprint = 'Org1 joined channel successfully.... ';
+
+				  		$scope.myFunc5();
+
+
+						         // var r=JSON.parse(response.data[0]);
+
+			          //$scope.myData = response.data;
+				    })
+			}
+
+			$scope.myFunc5 = function() {
+				$http({
+				    method : "POST",
+				    headers:{  
+				    		"authorization": "Bearer " + $window.localStorage["org2token"],
+						    "Accept":"application/json",
+						    "content-type":"application/json"
+						    },   
+				    url:"http://192.168.0.101:4000/channels/mychannel/peers",
+				    data: {
+				    	peers: ["peer1","peer2"]
+				    }
+				  }).then(function mySuccess(response) {
+				      
+				      	console.log(response.data);
+
+				  		$scope.dataprint = 'Org2 joined channel successfully.... ';
+
+				  		$scope.myFunc6();
+
+
+						         // var r=JSON.parse(response.data[0]);
+
+			          //$scope.myData = response.data;
+				    })
+			}
+
+			$scope.myFunc6 = function() {
+				$http({
+				    method : "POST",
+				    headers:{  
+				    		"authorization": "Bearer " + $window.localStorage["org1token"],
+						    "Accept":"application/json",
+						    "content-type":"application/json"
+						    },   
+				    url:"http://192.168.0.101:4000/chaincodes",
+				    data: {
+				    	peers: ["peer1", "peer2"],
+						chaincodeName:"fabcar",
+						chaincodePath:"github.com/fabcar",
+						chaincodeVersion:"v0"
+				    }
+				  }).then(function mySuccess(response) {
+				      
+				      	console.log(response.data);
+
+				  		$scope.dataprint = 'Chaincode installed on Org1.... ';
+
+				  		$scope.myFunc7();
+
+
+						         // var r=JSON.parse(response.data[0]);
+
+			          //$scope.myData = response.data;
+				    })
+			}
+
+			$scope.myFunc7 = function() {
+				$http({
+				    method : "POST",
+				    headers:{  
+				    		"authorization": "Bearer " + $window.localStorage["org2token"],
+						    "Accept":"application/json",
+						    "content-type":"application/json"
+						    },   
+				    url:"http://192.168.0.101:4000/chaincodes",
+				    data: {
+				    	peers: ["peer2"],
+						chaincodeName:"fabcar",
+						chaincodePath:"github.com/fabcar",
+						chaincodeVersion:"v0"
+				    }
+				  }).then(function mySuccess(response) {
+				      
+				      	console.log(response.data);
+
+				  		$scope.dataprint = 'Chaincode installed on Org2.... ';
+
+				  		//$scope.myFunc8();
+
+
+				  		$timeout(function() { $scope.myFunc8() }, 55000);
+
+						         // var r=JSON.parse(response.data[0]);
+
+			          //$scope.myData = response.data;
+				    })
+			}
+
+			$scope.myFunc8 = function() {
+				$http({
+				    method : "POST",
+				    headers:{  
+				    		"authorization": "Bearer " + $window.localStorage["org1token"],
+						    "Accept":"application/json",
+						    "content-type":"application/json"
+						    },   
+				    url:"http://192.168.0.101:4000/channels/mychannel/chaincodes",
+				    data: {
+						chaincodeName:"fabcar",
+						chaincodeVersion:"v0",
+						args: [""]
+				    }
+				  }).then(function mySuccess(response) {
+				      
+				      	console.log(response.data);
+
+				  		$scope.dataprint = 'Instantiated chaincode on peers of Org1.... Process complete.... ';
+
+
+						         // var r=JSON.parse(response.data[0]);
+
+			          //$scope.myData = response.data;
+				    })
+			}
+
+		});
+
+
+	</script>
+
+	<style type="text/css">
+		
+		body{
+			margin: 0;
+			overflow: hidden;
+			word-wrap: break-word;
+		}
+
+
+	</style>
+
+</head>
+<body>
+
+
+	<h2 style="padding: 10px; margin: 30px;  ">Medichain - Pharma supplychain transparency</h2><hr>
+
+
+	<div ng-app="myApp" ng-controller="myCtrl"> 
+
+		<center>
+			
+			<br/><br/><br/><br/><br/>
+
+			<button ng-click = "myFunc()" style="background: #3498db; color: white; font-size: 50px; border-radius: 5px; padding: 20px; ">Start process</button>
+			
+			<br/>
+			
+			<div style="margin: 20px; padding: 20px; font-size: 20px; color: white; "> {{ dataprint }} </div>
+
+
+		</center>
+
+	</div>
+
+</body>
+</html>

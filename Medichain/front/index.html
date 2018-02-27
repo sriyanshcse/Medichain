@@ -1,0 +1,132 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="">
+
+    <title>
+      
+        Ledger 
+      
+    </title>
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet">
+    
+      <link href="style1.css" rel="stylesheet">
+    
+    
+    <link href="style2.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+
+  <script>
+  var app = angular.module('myApp', []);
+  app.controller('myCtrl', function($scope, $http, $window) {
+      $http({
+        method : "GET",
+        headers:{  
+                    "authorization": "Bearer " + $window.localStorage["org1token"],
+                 "Accept":"application/json",
+                  "content-type":"application/x-www-form-urlencoded"
+                },   
+        url:"http://192.168.0.101:4000/channels/mychannel/chaincodes/fabcar?peer=peer1&fcn=queryAllMeds&args=%5B%22%22%5D",
+      }).then(function mySuccess(response) {
+          
+          console.log(response.data);
+
+                 // var r=JSON.parse(response.data[0]);
+
+            $scope.myData = response.data;
+        })
+    
+  });
+  </script>
+
+
+    <style>
+      /* note: this is a hack for ios iframe for bootstrap themes shopify page */
+      /* this chunk of css is not part of the toolkit :) */
+      body {
+        width: 1px;
+        min-width: 100%;
+        *width: 100%;
+      }
+    </style>
+  </head>
+
+
+<body ng-app="myApp" ng-controller="myCtrl">
+  <div class="bw">
+    <div class="dh">
+      <div class="et brf">
+        <div class="bqn">
+  <div class="bqo">
+    <h2 class="bqp">Ledger All Records</h2>
+  </div>
+</div>
+
+<div class="bop ayg">
+  <div class="boq bor">
+    <div class="axm bpy">
+      <input type="text" class="form-control bsx" placeholder="Search by BatchID">
+     <!--  <span class="bv bhw"></span> -->
+    </div>
+  </div>
+</div>
+
+<div class="ly">
+  <table class="ck" data-sort="table">
+    <thead>
+      <tr>
+        <th>Batch ID</th>
+        <th>Description</th>
+        <th>Current owner</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <script type="text/javascript"></script>
+      <tr ng-repeat="x in myData">
+        <?php
+          $id = {{x.id}}
+        ?>
+        <td><a href="history.php?id={{x.id}}">{{x.id}}</a></td>
+        <td>{{x.description}}</td>
+        <td>{{x.owner}}</td>
+        <td>{{x.status}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+      </div>
+    </div>
+  </div>
+
+
+
+    <script src="script1.js"></script>
+    <script src="script2.js"></script>
+    <script src="script3.js"></script>
+    <script src="script4.js"></script>
+    <script src="script5.js"></script>
+    <script src="script6.js"></script>
+    <script>
+      // execute/clear BS loaders for docs
+      $(function(){while(window.BS&&window.BS.loader&&window.BS.loader.length){(window.BS.loader.pop())()}})
+    </script>
+  </body>
+</html>
+
+

@@ -83,7 +83,7 @@ curl -s -X POST \
 	"peers": ["peer1", "peer2"],
 	"chaincodeName":"fabcar",
 	"chaincodePath":"github.com/fabcar",
-	"chaincodeVersion":"v2"
+	"chaincodeVersion":"v0"
 }'
 echo
 echo
@@ -112,7 +112,7 @@ curl -s -X POST \
   -H "content-type: application/json" \
   -d '{
 	"chaincodeName":"fabcar",
-	"chaincodeVersion":"v1",
+	"chaincodeVersion":"v0",
   "args": [""]
 }'
 echo

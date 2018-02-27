@@ -9,17 +9,23 @@
 .DS_Store
 .project
 
-first-network/channel-artifacts/*.tx
-first-network/channel-artifacts/*.block
-first-network/crypto-config/*
+/first-network
 
-chaincode-docker-devmode/myc.block
-chaincode-docker-devmode/chaincode/sacc/sacc
-chaincode-docker-devmode/chaincode/chaincode_example02/chaincode_example02
+/chaincode-docker-devmode
 
 # fabric sdk node modules
-fabcar/node_modules/
+/fabcar
 
-# balance transfer sample
-balance-transfer/.DS_Store
-balance-transfer/node_modules/*
+/basic-network
+
+/chaincode
+
+/chaincode-docker-devmode
+
+/high-throughput
+
+/scripts
+
+# Medichain sample
+Medichain/.DS_Store
+Medichain/node_modules/*
