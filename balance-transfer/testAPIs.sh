@@ -81,9 +81,9 @@ curl -s -X POST \
   -H "content-type: application/json" \
   -d '{
 	"peers": ["peer1", "peer2"],
-	"chaincodeName":"mycc",
-	"chaincodePath":"github.com/example_cc",
-	"chaincodeVersion":"v0"
+	"chaincodeName":"fabcar",
+	"chaincodePath":"github.com/fabcar",
+	"chaincodeVersion":"v2"
 }'
 echo
 echo
@@ -96,24 +96,38 @@ curl -s -X POST \
   -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"peers": ["peer1","peer2"],
-	"chaincodeName":"mycc",
-	"chaincodePath":"github.com/example_cc",
+	"peers": ["peer2"],
+	"chaincodeName":"fabcar",
+	"chaincodePath":"github.com/fabcar",
 	"chaincodeVersion":"v0"
 }'
 echo
 echo
 
-echo "POST instantiate chaincode on peer1 of Org1"
+echo "POST instantiate chaincode on peers of Org1"
 echo
 curl -s -X POST \
   http://localhost:4000/channels/mychannel/chaincodes \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"chaincodeName":"mycc",
-	"chaincodeVersion":"v0",
-	"args":["a","100","b","200"]
+	"chaincodeName":"fabcar",
+	"chaincodeVersion":"v1",
+  "args": [""]
+}'
+echo
+echo
+
+echo "POST instantiate chaincode on peers of Org2"
+echo
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/chaincodes \
+  -H "authorization: Bearer $ORG2_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{
+  "chaincodeName":"fabcar",
+  "chaincodeVersion":"v0",
+  "args": [""]
 }'
 echo
 echo
@@ -121,12 +135,26 @@ echo
 echo "POST invoke chaincode on peers of Org1 and Org2"
 echo
 TRX_ID=$(curl -s -X POST \
-  http://localhost:4000/channels/mychannel/chaincodes/mycc \
+  http://localhost:4000/channels/mychannel/chaincodes/fabcar \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json" \
   -d '{
-	"fcn":"move",
-	"args":["a","b","10"]
+	"fcn":"initLedger",
+  "args":[""]
+}')
+echo "Transacton ID is $TRX_ID"
+echo
+echo
+
+echo "POST invoke chaincode on peers of Org1 and Org2"
+echo
+TRX_ID=$(curl -s -X POST \
+  http://localhost:4000/channels/mychannel/chaincodes/fabcar \
+  -H "authorization: Bearer $ORG1_TOKEN" \
+  -H "content-type: application/json" \
+  -d '{
+  "fcn":"createMed",
+  "args":["Med2", " ", "Jiren", "654.5 45654.55", "27.6", "18", "25"]
 }')
 echo "Transacton ID is $TRX_ID"
 echo
@@ -135,7 +163,7 @@ echo
 echo "GET query chaincode on peer1 of Org1"
 echo
 curl -s -X GET \
-  "http://localhost:4000/channels/mychannel/chaincodes/mycc?peer=peer1&fcn=query&args=%5B%22a%22%5D" \
+  "http://localhost:4000/channels/mychannel/chaincodes/fabcar?peer=peer1&fcn=queryAllMeds&args=%5B%22%22%5D" \
   -H "authorization: Bearer $ORG1_TOKEN" \
   -H "content-type: application/json"
 echo
@@ -186,7 +214,7 @@ echo "GET query Installed chaincodes"
 echo
 curl -s -X GET \
   "http://localhost:4000/chaincodes?peer=peer1&type=installed" \
-  -H "authorization: Bearer $ORG1_TOKEN" \
+  -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json"
 echo
 echo
@@ -194,8 +222,8 @@ echo
 echo "GET query Instantiated chaincodes"
 echo
 curl -s -X GET \
-  "http://localhost:4000/chaincodes?peer=peer1&type=instantiated" \
-  -H "authorization: Bearer $ORG1_TOKEN" \
+  "http://localhost:4000/chaincodes?peer=peer2&type=instantiated" \
+  -H "authorization: Bearer $ORG2_TOKEN" \
   -H "content-type: application/json"
 echo
 echo

@@ -38,3 +38,6 @@ rm -rf hfc-key-store/
 node enrollAdmin.js
 
 node registerUser.js
+
+
+#curl -s -X GET "http://localhost:4000/channels/mychannel/chaincodes/fabcar?peer=peer1&fcn=queryMed&args[]=Med0" -H "authorization: Bearer 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTk2MDU2OTAsInVzZXJuYW1lIjoiQmFycnkiLCJvcmdOYW1lIjoib3JnMiIsImlhdCI6MTUxOTU2OTY5MH0.P4p2XMlwTC3iy6W-NuSZBEo7LFjZ9VPuh33VkRI3lc8'" -H "content-type: application/json"

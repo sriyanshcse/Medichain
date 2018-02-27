@@ -92,7 +92,7 @@ var server = http.createServer(app).listen(port, function() {});
 logger.info('****************** SERVER STARTED ************************');
 logger.info('**************  http://' + host + ':' + port +
 	'  ******************');
-server.timeout = 240000;
+server.timeout = 2400000;
 
 function getErrorMessage(field) {
 	var response = {
@@ -121,10 +121,10 @@ app.post('/users', function(req, res) {
 		return;
 	}
 	var token = jwt.sign({
-		exp: Math.floor(Date.now() / 1000) + parseInt(hfc.getConfigSetting('jwt_expiretime')),
+		//exp: Math.floor(Date.now() / 1000) + parseInt(hfc.getConfigSetting('jwt_expiretime')),
 		username: username,
 		orgName: orgName
-	}, app.get('secret'));
+	}, app.get('secret'), {expiresIn: 86400});
 	helper.getRegisteredUsers(username, orgName, true).then(function(response) {
 		if (response && typeof response !== 'string') {
 			response.token = token;
@@ -278,6 +278,7 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName', function(req, res) 
 
 	invoke.invokeChaincode(peers, channelName, chaincodeName, fcn, args, req.username, req.orgname)
 	.then(function(message) {
+		logger.debug(message);
 		res.send(message);
 	});
 });
@@ -317,6 +318,7 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName', function(req, res) {
 
 	query.queryChaincode(peer, channelName, chaincodeName, args, fcn, req.username, req.orgname)
 	.then(function(message) {
+		logger.debug(message);
 		res.send(message);
 	});
 });
