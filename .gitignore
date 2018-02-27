@@ -9,6 +9,7 @@
 .DS_Store
 .project
 
+<<<<<<< HEAD
 /first-network
 
 /chaincode-docker-devmode
@@ -27,5 +28,8 @@
 /scripts
 
 # Medichain sample
+=======
+#Medichain
+>>>>>>> b6345216d264b25a2a20d76c98ceb6f531684cd3
 Medichain/.DS_Store
 Medichain/node_modules/*
