@@ -152,7 +152,7 @@ var getChainInfo = function(peer, username, org) {
 	var channel = helper.getChannelForOrg(org);
 
 	return helper.getRegisteredUsers(username, org).then((member) => {
-		return channel.queryInfo(target);
+		return peer.blockchainInfo(target);
 	}, (err) => {
 		logger.info('Failed to get submitter "' + username + '"');
 		return 'Failed to get submitter "' + username + '". Error: ' + err.stack ?
