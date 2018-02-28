@@ -44,7 +44,8 @@
 
 	<script>
 	var app = angular.module('myApp', []);
-	app.controller('myCtrl', function($scope, $http, $window) {
+	app.controller('myCtrl', function($scope, $http, $window, $timeout) {
+		var arr = [{lat: 20.83, lng: 79.66,tmp: 25}, {lat: 25.98, lng: 89.96, tmp: 22}, {lat:34.55, lng: 107.10, tmp: 22}] ; 
 		$scope.myFunc = function() {
 		  $http({
 		    method : "POST",
@@ -53,7 +54,7 @@
 						     "Accept":"application/json",
 						      "content-type":"application/json"
 				        },   
-		    url:"http://192.168.0.101:4000/channels/mychannel/chaincodes/fabcar",
+		    url:"http://localhost:4000/channels/mychannel/chaincodes/fabcar",
 		    data: {
 		    	fcn: "createMed",
 		    	args: [$scope.medid, $scope.desc, $scope.owner, $scope.latitude+' '+$scope.longitude, $scope.temperature, $scope.lowlim, $scope.upplim]
@@ -61,18 +62,47 @@
 		  }).then(function mySuccess(response) {
 		      
 		      console.log(response);
-
+		      $scope.update_iot(arr[0]);
 				         // var r=JSON.parse(response.data[0]);
 
 	          //$scope.myData = response.data;
 		    })
 		}
+		var count = 1;
+		$scope.update_iot = function(iot) {
+			console.log("updating iot");
+			$http({
+		    method : "POST",
+		    headers:{  
+				           	"authorization": "Bearer " + $window.localStorage["org1token"],
+						     "Accept":"application/json",
+						      "content-type":"application/json"
+				        },   
+		    url:"http://localhost:4000/channels/mychannel/chaincodes/fabcar",
+		    data: {
+		    	fcn: "changeLocTemp",
+		    	args: [$scope.medid, iot.lat.toString() + " " + iot.lng.toString(), iot.tmp.toString()]
+		    }
+		  }).then(function mySuccess(response) {
+		      
+		      console.log(response);
+		      count = count + 1;
+		      if (count < 4) {
+		      	$scope.update_iot(arr[count - 1]);
+		      }
+		      //update_iot();
+				         // var r=JSON.parse(response.data[0]);
+
+	          //$scope.myData = response.data;
+		    })
+		}
+
 	});
 	</script>
 
     <style>
       /* note: this is a hack for ios iframe for bootstrap themes shopify page */
-      /* this chunk of css is not part of the toolkit :) */
+      /* this chuvank of css is not part of the toolkit :) */
       body {
         width: 1px;
         min-width: 100%;
@@ -104,8 +134,6 @@
 			<input type="text" ng-model="latitude" id="box1" placeholder="Latitude"><br/>
 			<input type="text" ng-model="longitude" id="box1" placeholder="Longitude"><br/>
 			<input type="text" ng-model="owner" id="box1" placeholder="Owner"><br/>
-
-
 		</form>
 <br/>
 		<button ng-click = "myFunc()" style="background: #3498db; color: white; font-size: 20px; border-radius: 5px; padding: 10px; ">Create asset</button>

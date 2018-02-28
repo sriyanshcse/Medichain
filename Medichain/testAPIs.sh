@@ -83,7 +83,7 @@ curl -s -X POST \
 	"peers": ["peer1", "peer2"],
 	"chaincodeName":"fabcar",
 	"chaincodePath":"github.com/fabcar",
-	"chaincodeVersion":"v0"
+	"chaincodeVersion":"v1"
 }'
 echo
 echo
@@ -99,7 +99,7 @@ curl -s -X POST \
 	"peers": ["peer2"],
 	"chaincodeName":"fabcar",
 	"chaincodePath":"github.com/fabcar",
-	"chaincodeVersion":"v0"
+	"chaincodeVersion":"v1"
 }'
 echo
 echo
@@ -112,7 +112,7 @@ curl -s -X POST \
   -H "content-type: application/json" \
   -d '{
 	"chaincodeName":"fabcar",
-	"chaincodeVersion":"v0",
+	"chaincodeVersion":"v1",
   "args": [""]
 }'
 echo
@@ -126,7 +126,7 @@ curl -s -X POST \
   -H "content-type: application/json" \
   -d '{
   "chaincodeName":"fabcar",
-  "chaincodeVersion":"v0",
+  "chaincodeVersion":"v1",
   "args": [""]
 }'
 echo

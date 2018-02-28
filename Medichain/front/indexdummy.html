@@ -103,7 +103,9 @@
         <td><a href="history.php?id={{x.id}}">{{x.id}}</a></td>
         <td>{{x.description}}</td>
         <td>{{x.owner}}</td>
-        <td>{{x.status}}</td>
+        <td ng-if="x.status" class="Success"><b>SUCCESS</b></td>
+        <td ng-if="!x.status" class="Failure"><b>FAILED</b></td>
+
       </tr>
     </tbody>
   </table>

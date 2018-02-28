@@ -24,7 +24,7 @@
 					    "Accept":"application/json",
 					    "content-type":"application/json"
 					    },   
-			    url:"http://192.168.0.101:4000/users",
+			    url:"http://localhost:4000/users",
 			    data: {
 			    	username: "Jim",
 			    	orgName: "org1"
@@ -52,7 +52,7 @@
 						    "Accept":"application/json",
 						    "content-type":"application/json"
 						    },   
-				    url:"http://192.168.0.101:4000/users",
+				    url:"http://localhost:4000/users",
 				    data: {
 				    	username: "Barry",
 				    	orgName: "org2"
@@ -81,7 +81,7 @@
 						    "Accept":"application/json",
 						    "content-type":"application/json"
 						    },   
-				    url:"http://192.168.0.101:4000/channels",
+				    url:"http://localhost:4000/channels",
 				    data: {
 				    	channelName: "mychannel",
 						channelConfigPath: "../artifacts/channel/mychannel.tx"
@@ -109,7 +109,7 @@
 						    "Accept":"application/json",
 						    "content-type":"application/json"
 						    },   
-				    url:"http://192.168.0.101:4000/channels/mychannel/peers",
+				    url:"http://localhost:4000/channels/mychannel/peers",
 				    data: {
 				    	peers: ["peer1","peer2"]
 				    }
@@ -136,7 +136,7 @@
 						    "Accept":"application/json",
 						    "content-type":"application/json"
 						    },   
-				    url:"http://192.168.0.101:4000/channels/mychannel/peers",
+				    url:"http://localhost:4000/channels/mychannel/peers",
 				    data: {
 				    	peers: ["peer1","peer2"]
 				    }
@@ -163,7 +163,7 @@
 						    "Accept":"application/json",
 						    "content-type":"application/json"
 						    },   
-				    url:"http://192.168.0.101:4000/chaincodes",
+				    url:"http://localhost:4000/chaincodes",
 				    data: {
 				    	peers: ["peer1", "peer2"],
 						chaincodeName:"fabcar",
@@ -193,7 +193,7 @@
 						    "Accept":"application/json",
 						    "content-type":"application/json"
 						    },   
-				    url:"http://192.168.0.101:4000/chaincodes",
+				    url:"http://localhost:4000/chaincodes",
 				    data: {
 				    	peers: ["peer2"],
 						chaincodeName:"fabcar",
@@ -206,10 +206,10 @@
 
 				  		$scope.dataprint = 'Chaincode installed on Org2.... ';
 
-				  		//$scope.myFunc8();
+				  		$scope.myFunc8();
 
 
-				  		$timeout(function() { $scope.myFunc8() }, 55000);
+				  		// $timeout(function() { $scope.myFunc8() }, 55000);
 
 						         // var r=JSON.parse(response.data[0]);
 
@@ -225,7 +225,7 @@
 						    "Accept":"application/json",
 						    "content-type":"application/json"
 						    },   
-				    url:"http://192.168.0.101:4000/channels/mychannel/chaincodes",
+				    url:"http://localhost:4000/channels/mychannel/chaincodes",
 				    data: {
 						chaincodeName:"fabcar",
 						chaincodeVersion:"v0",

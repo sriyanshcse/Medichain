@@ -26,3 +26,11 @@ hr {
 .h {
   border-bottom: 0;
 }
+
+.Success{
+  color: green;
+}
+
+.Failure{
+  color: red;
+}

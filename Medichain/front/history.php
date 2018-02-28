@@ -46,7 +46,7 @@ $medid = $_GET['id'];
 
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB9ZgDbEH6lp_X6YE4JNt_M8dc3UyQs6j0&callback=initMap">
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB9ZgDbEH6lp_X6YE4JNt_M8dc3UyQs6j0">
 </script>
 
 
@@ -60,7 +60,7 @@ $medid = $_GET['id'];
                      "Accept":"application/json",
                       "content-type":"application/x-www-form-urlencoded"
                     },   
-            url:"http://192.168.0.101:4000/channels/mychannel/chaincodes/fabcar?peer=peer1&fcn=queryMedHistory&args=%5B%22" + '<?php echo $medid ?>' + "%22%5D",
+            url:"http://localhost:4000/channels/mychannel/chaincodes/fabcar?peer=peer1&fcn=queryMedHistory&args=%5B%22" + '<?php echo $medid ?>' + "%22%5D",
           }).then(function mySuccess(response) {
               
               console.log(response.data);
@@ -68,29 +68,26 @@ $medid = $_GET['id'];
                      // var r=JSON.parse(response.data[0]);
 
                 $scope.myData = response.data;
+                $scope.initMap(response.data);
             })
-        
-      });
-      </script>
 
-      <script type="text/javascript">
-        
-        var poly;
+          var poly;
           var map;
 
-          function initMap() {
+          $scope.initMap = function(data) {
+            console.log("hello");
+            var points = [];
+            for (var i = 0; i < data.length; i++) {
+                var loc = data[i].location.split(" ");
+                points.push({
+                  lat: loc[0],
+                  lng: loc[1]
+                });
+            }
             map = new google.maps.Map(document.getElementById('map'), {
-              zoom:7,
-              center: {lat: 21.879, lng: -87.624}  // Center the map on Chicago, USA.
+              zoom:3,
+              center: {lat: parseFloat(points[0].lat), lng: parseFloat(points[0].lng)}  // Center the map on Chicago, USA.
             });
-
-            var points = [
-              {lat: 21.725, lng: -86.564},
-              {lat: 22.879, lng: -84.884},
-              {lat: 23.655, lng: -81.561},
-              {lat: 24.654, lng: -75.223}
-            ];
-
             poly = new google.maps.Polyline({
               strokeColor: '#000000',
               strokeOpacity: 1.0,
@@ -121,6 +118,13 @@ console.log("hello world");
               map: map
             });
           }
+        
+      });
+      </script>
+
+      <script type="text/javascript">
+        
+        
 
 
       </script>
@@ -151,6 +155,7 @@ console.log("hello world");
         <th>Temperature</th>
         <th>Location</th>
         <th>Owner</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
@@ -160,6 +165,8 @@ console.log("hello world");
         <td>{{x.temperature}} C</td>
         <td>{{x.location}}</td>
         <td>{{x.owner}}</td>
+        <td ng-if="x.status" class="Success"><b>SUCCESS</b></td>
+        <td ng-if="!x.status" class="Failure"><b>FAILED</b></td>
       </tr>
     </tbody>
   </table>

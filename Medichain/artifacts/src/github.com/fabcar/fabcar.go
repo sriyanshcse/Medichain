@@ -282,6 +282,7 @@ func (s *SmartContract) changeLocTemp(APIstub shim.ChaincodeStubInterface, args 
 		scStatus := SmartContractStatus{
 			Status : med.Status,
 		}
+		med.TxID = APIstub.GetTxID();
 		med.Location = args[1]
 		med.Temperature = n
 		medAsBytes, _ = json.Marshal(med)
