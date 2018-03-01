@@ -1,1 +1,2 @@
 Medichain/front/* linguist-vendored
+Medichain/**/*.js linguist-vendored
